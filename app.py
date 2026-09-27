@@ -16,6 +16,13 @@ class CompatibleDense(Dense):
         kwargs.pop('quantization_config', None)
         super().__init__(*args, **kwargs)
 
+# Helper function untuk render gambar yang kompatibel di semua versi Streamlit
+def safe_image(image_data, **kwargs):
+    try:
+        st.image(image_data, use_container_width=True, **kwargs)
+    except TypeError:
+        st.image(image_data, use_column_width=True, **kwargs)
+
 # -----------------------------------------------------------------------------
 # 1. KONFIGURASI HALAMAN STREAMLIT
 # -----------------------------------------------------------------------------
@@ -155,7 +162,7 @@ if uploaded_file is not None:
     
     with col1:
         st.subheader("🐟 Gambar Input")
-        st.image(image, use_column_width=True)
+        safe_image(image)
         
     with st.spinner("🐟 Menganalisis gambar..."):
         preds = model.predict(np.expand_dims(img_array, axis=0), verbose=0)[0]
@@ -189,13 +196,13 @@ if uploaded_file is not None:
             xcol1, xcol2, xcol3 = st.columns(3)
             
             with xcol1:
-                st.markdown("<p style='text-align: center; font-weight: bold;'>Citra Asli (160x160)</p>", unsafe_allow_html=True)
-                st.image(img_array, use_column_width=True)
-                
+                st.markdown("**Gambar Asli**")
+                safe_image(image_resized)
+
             with xcol2:
-                st.markdown("<p style='text-align: center; font-weight: bold;'>Heatmap Oklusi</p>", unsafe_allow_html=True)
-                st.image(heatmap, clamp=True, use_column_width=True)
-                
+                st.markdown("**Peta Heatmap**")
+                safe_image(heatmap, clamp=True)
+
             with xcol3:
-                st.markdown("<p style='text-align: center; font-weight: bold;'>Overlay Prediksi</p>", unsafe_allow_html=True)
-                st.image(overlay, use_column_width=True)
+                st.markdown("**Overlay Heatmap**")
+                safe_image(overlay)
