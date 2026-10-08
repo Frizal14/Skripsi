@@ -43,25 +43,29 @@ MODEL_CONFIGS = {
         "file_id": "1CZouFlsMkU4anU6pjz6w9v7KCGDgB0-w",
         "filename": "mobilenet_tl_best.h5",
         "acc": "99.20%",
-        "type": "Transfer Learning (ImageNet)"
+        "type": "Transfer Learning (ImageNet)",
+        "short_name": "MobileNetV2 TL"
     },
     "VGG16 - Transfer Learning (94.71%)": {
         "file_id": "1nO0wNMwrZhEvwNVnlMgu5Qd4y2born9m",
         "filename": "vgg16_tl_best.h5",
         "acc": "94.71%",
-        "type": "Transfer Learning (ImageNet)"
+        "type": "Transfer Learning (ImageNet)",
+        "short_name": "VGG16 TL"
     },
     "VGG16 - Non-Transfer Learning (88.98%)": {
         "file_id": "1Efqj7QMK_HqC4uyd48wbfkyyEwlPhG4b",
         "filename": "vgg16_non_tl_best.h5",
         "acc": "88.98%",
-        "type": "From Scratch (Non-TL)"
+        "type": "From Scratch (Non-TL)",
+        "short_name": "VGG16 Non-TL"
     },
     "MobileNetV2 - Non-Transfer Learning (Collapse ~20%)": {
         "file_id": "1TYMtCcufVBsV3x2rR7uLiH8oB3eNqN_Q",
         "filename": "mobilenet_non_tl_best.h5",
         "acc": "~20.00%",
-        "type": "From Scratch (Non-TL)"
+        "type": "From Scratch (Non-TL)",
+        "short_name": "MobileNetV2 Non-TL"
     }
 }
 
@@ -185,24 +189,40 @@ if uploaded_file is not None:
 
     st.markdown("---")
     
-    # Section Explainable AI
-    st.subheader("🐟 Visualisasi Explainable AI (Occlusion Sensitivity)")
-    st.caption("Peta panas (heatmap) menunjukkan wilayah tubuh ikan yang paling berpengaruh terhadap hasil klasifikasi.")
+    # -----------------------------------------------------------------------------
+    # SECTION EXPLAINABLE AI (DESAIN SESUAI GAMBAR ACUAN)
+    # -----------------------------------------------------------------------------
+    short_model_name = selected_config["short_name"]
+    
+    st.subheader("🐟 Analisis Visualisasi XAI")
     
     if st.button("Jalankan Analisis XAI", type="primary"):
         with st.spinner("🐟 Menghitung heatmap sensitivitas oklusi..."):
             heatmap, overlay = generate_occlusion_heatmap(model, img_array)
             
-            xcol1, xcol2, xcol3 = st.columns(3)
+            # Membuat plot Matplotlib 1 baris x 3 kolom sesuai desain gambar
+            fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+            fig.suptitle(
+                f"Visualisasi XAI (Occlusion Sensitivity) - {short_model_name}", 
+                fontsize=14, 
+                fontweight='bold', 
+                y=1.03
+            )
             
-            with xcol1:
-                st.markdown("**Gambar Asli**")
-                safe_image(image_resized)
-
-            with xcol2:
-                st.markdown("**Peta Heatmap**")
-                safe_image(heatmap, clamp=True)
-
-            with xcol3:
-                st.markdown("**Overlay Heatmap**")
-                safe_image(overlay)
+            # 1. Gambar Asli
+            axes[0].imshow(img_array)
+            axes[0].set_title(f"Gambar Asli\nTrue: {pred_class}", fontsize=11)
+            axes[0].axis('off')
+            
+            # 2. Heatmap Occlusion Sensitivity
+            axes[1].imshow(heatmap, cmap='jet')
+            axes[1].set_title("Heatmap Occlusion Sensitivity\n(Merah = Bagian Paling Penting)", fontsize=11)
+            axes[1].axis('off')
+            
+            # 3. Overlay Hasil Prediksi
+            axes[2].imshow(overlay)
+            axes[2].set_title(f"Overlay Hasil Prediksi\nPred: {pred_class} ({confidence:.2f}%)", fontsize=11)
+            axes[2].axis('off')
+            
+            plt.tight_layout()
+            st.pyplot(fig)
